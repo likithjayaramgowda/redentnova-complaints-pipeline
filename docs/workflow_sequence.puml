@@ -1,0 +1,46 @@
+@startuml ComplaintsPipelineSequence
+title Unified Complaints Pipeline - Key Interactions (QAF Schema Aligned)
+
+hide footbox
+skinparam shadowing false
+
+actor "Customer" as C
+participant "Google Form" as GF
+participant "Apps Script" as AS
+participant "Google Sheet (Complaints tab)" as GS
+participant "GitHub API" as GH
+participant "GitHub Actions Runner" as Runner
+participant "Python complaints_pipeline" as App
+participant "Entra ID" as Entra
+participant "Microsoft Graph" as Graph
+participant "SharePoint" as SP
+participant "Mailbox" as MB
+
+== Per-submission ==
+C -> GF: Submit complaint
+GF -> AS: onFormSubmit(e)
+AS -> AS: Normalize fields to QAF schema
+AS -> GS: appendRow(QAF ordered row)
+AS -> GH: POST /dispatches (normalized fields)
+GH -> Runner: workflow start (repository_dispatch)
+Runner -> App: dispatch --sp-upload --email
+App -> App: Generate PDF (QAF order)
+App -> Entra: client_credentials token
+Entra --> App: access_token
+App -> Graph: site/drive resolve + upload PDF/JSON
+Graph -> SP: store files
+opt email enabled + sender configured
+  App -> Graph: sendMail (attach PDF)
+  Graph -> MB: deliver
+end
+
+== Daily backup ==
+Runner -> App: backup --sp-upload --sp-upload-log --email
+App -> GS: read all records (Complaints tab)
+App -> App: write CSV + log
+App -> Graph: upload CSV/log
+opt admin email configured
+  App -> Graph: sendMail (attach CSV/log)
+end
+
+@enduml

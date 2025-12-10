@@ -1,0 +1,40 @@
+@startuml ComplaintsPipelineActivity
+title Unified Complaints Pipeline (QAF Schema Aligned)
+
+skinparam shadowing false
+skinparam backgroundColor white
+
+start
+
+partition "Google Workspace" {
+  :Customer submits Google Form;
+  :Apps Script onFormSubmit trigger;
+  :Normalize fields to QAF header order;
+  :Append row to worksheet "Complaints";
+  :POST repository_dispatch to GitHub (normalized fields + recipients);
+}
+
+partition "GitHub Actions" {
+  :Workflow triggered by repository_dispatch;
+  :Install deps + lint + tests;
+  :Run Python dispatch mode;
+}
+
+partition "Python (complaints_pipeline dispatch)" {
+  :Parse client_payload (submission_id, fields, email_to);
+  :Render PDF in QAF section order;
+  :Upload PDF + JSON to SharePoint;
+  :Optional email (Graph sendMail);
+  :Exit 0;
+}
+
+partition "Scheduled Audit" {
+  :Daily schedule triggers backup mode;
+  :Read worksheet "Complaints";
+  :Write CSV backup + log;
+  :Upload CSV (+ log) to SharePoint;
+  :Optional admin email;
+}
+
+stop
+@enduml
