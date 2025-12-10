@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from complaints_pipeline.backup import backup_to_csv
 
+
 def test_backup_to_csv_writes_header_and_rows(tmp_path: Path):
     fake_ws = object()
     rows = [

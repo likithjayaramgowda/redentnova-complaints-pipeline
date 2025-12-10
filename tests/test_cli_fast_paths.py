@@ -1,7 +1,9 @@
 from unittest.mock import patch
+
 import pytest
 
 from complaints_pipeline.cli import main
+
 
 def test_cli_requires_subcommand(monkeypatch):
     monkeypatch.setattr("sys.argv", ["prog"])

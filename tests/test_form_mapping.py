@@ -1,5 +1,6 @@
 from complaints_pipeline.form_mapping import normalize_fields
 
+
 def test_normalize_fields_maps_question_titles():
     raw = {
         "First Name": "Ada",

@@ -4,7 +4,6 @@ from typing import Dict, List
 
 from .schema import SHEET_COLUMNS
 
-
 DEFAULT_WORKSHEET = "Complaints"
 
 

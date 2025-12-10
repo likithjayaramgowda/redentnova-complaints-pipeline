@@ -1,4 +1,5 @@
-from complaints_pipeline.schema import SHEET_COLUMNS, PDF_SECTIONS
+from complaints_pipeline.schema import PDF_SECTIONS, SHEET_COLUMNS
+
 
 def test_schema_columns_unique_and_nonempty():
     assert len(SHEET_COLUMNS) == len(set(SHEET_COLUMNS))
