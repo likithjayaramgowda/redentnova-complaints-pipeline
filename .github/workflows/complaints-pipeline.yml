@@ -2,6 +2,7 @@ name: Complaints Pipeline (Forms/Sheets -> PDF/email -> SharePoint)
 
 on:
   schedule:
+    - cron: "*/5 * * * *"   # every 5 minutes (MS Forms poll)
     - cron: "15 2 * * *"   # daily 02:15 UTC (backup)
   workflow_dispatch: {}
   repository_dispatch:
@@ -68,6 +69,8 @@ jobs:
         run: |
           if [ "$GITHUB_EVENT_NAME" = "repository_dispatch" ]; then
             python -m complaints_pipeline dispatch --sp-upload --email
+          elif [ "$GITHUB_EVENT_NAME" = "schedule" ]; then
+            python -m complaints_pipeline msforms-poll --sp-upload --email
           else
             python -m complaints_pipeline backup --sp-upload --sp-upload-log --email
           fi
