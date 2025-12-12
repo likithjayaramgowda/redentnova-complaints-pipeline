@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .msforms_poll import run_msforms_poll
 
 import argparse
 import json
@@ -73,6 +74,9 @@ def parse_args() -> argparse.Namespace:
 
     pd = sub.add_parser("dispatch", help="Process repository_dispatch payload -> PDF -> SharePoint (+ email).")
     add_common(pd)
+    pm = sub.add_parser("msforms-poll", help="Poll MS Forms Excel (SharePoint) -> PDF/email -> SharePoint; mark Processed.")
+    add_common(pm)
+
     pd.add_argument("--event-path", default=os.getenv("GITHUB_EVENT_PATH", ""), help="Path to GitHub event JSON.")
     pd.add_argument("--title", default="Customer Complaint Form")
 
