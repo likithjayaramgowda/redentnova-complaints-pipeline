@@ -259,4 +259,6 @@ def main() -> int:
         return run_backup(args)
     if args.cmd == "dispatch":
         return run_dispatch(args)
+    if args.cmd == "poll":
+        return run_poll(args)
     raise SystemExit("Unknown command")
