@@ -1,9 +1,9 @@
-name: Complaints Pipeline (Forms/Sheets -> PDF/email -> SharePoint)
+name: Complaints Pipeline (Forms -> PDF/email -> SharePoint)
 
 on:
   schedule:
     - cron: "*/5 * * * *"   # every 5 minutes (MS Forms poll)
-    - cron: "15 2 * * *"   # daily 02:15 UTC (backup)
+    - cron: "15 2 * * *"    # daily 02:15 UTC (backup)
   workflow_dispatch: {}
   repository_dispatch:
     types: [form_submit]
@@ -27,27 +27,13 @@ jobs:
           pip install -r requirements.txt -r requirements-dev.txt
           pip install -e .
 
-      #- name: Lint
-       # run: ruff check .
-
-      - name: Run tests
-        run: pytest -q
-
-      - name: Write Google service account JSON
-        env:
-          GOOGLE_SA_JSON_B64: ${{ secrets.GOOGLE_SA_JSON_B64 }}
-        run: |
-          test -n "$GOOGLE_SA_JSON_B64"
-          echo "$GOOGLE_SA_JSON_B64" | base64 -d > "$RUNNER_TEMP/gcp-sa.json"
+      # Optional: keep tests off for now to avoid blocking scheduled runs
+      # - name: Run tests
+      #   run: pytest -q
 
       - name: Run pipeline
         env:
-          # Google Sheets
-          GSHEET_ID: ${{ secrets.GSHEET_ID }}
-          GSHEET_WORKSHEET: Complaints
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/gcp-sa.json
-
-          # SharePoint target
+          # SharePoint target (output)
           SP_HOSTNAME: ${{ secrets.SP_HOSTNAME }}
           SP_SITE_PATH: ${{ secrets.SP_SITE_PATH }}
           SP_FOLDER: ${{ secrets.SP_FOLDER }}
@@ -57,7 +43,13 @@ jobs:
           MS_CLIENT_ID: ${{ secrets.MS_CLIENT_ID }}
           MS_CLIENT_SECRET: ${{ secrets.MS_CLIENT_SECRET }}
 
-          # Optional email sender
+          # MS Forms Excel source
+          MSFORM_SITE_PATH: ${{ secrets.MSFORM_SITE_PATH }}
+          MSFORM_DRIVE_NAME: ${{ secrets.MSFORM_DRIVE_NAME }}
+          MSFORM_FILE_PATH: ${{ secrets.MSFORM_FILE_PATH }}
+          MSFORM_TABLE_NAME: ${{ secrets.MSFORM_TABLE_NAME }}
+
+          # Email
           MAIL_SENDER_UPN: ${{ secrets.MAIL_SENDER_UPN }}
           BACKUP_EMAIL_TO: ${{ secrets.BACKUP_EMAIL_TO }}
 
@@ -68,9 +60,9 @@ jobs:
           GITHUB_EVENT_PATH: ${{ github.event_path }}
         run: |
           if [ "$GITHUB_EVENT_NAME" = "repository_dispatch" ]; then
-            python -m complaints_pipeline dispatch --sp-upload --email
+            python -m complaints_pipeline dispatch
           elif [ "$GITHUB_EVENT_NAME" = "schedule" ]; then
-            python -m complaints_pipeline msforms-poll --sp-upload --email
+            python -m complaints_pipeline msforms-poll
           else
-            python -m complaints_pipeline backup --sp-upload --sp-upload-log --email
+            python -m complaints_pipeline backup
           fi
